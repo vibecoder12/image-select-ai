@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Selector</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            display: none;
+        }
+        .api-config {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .api-config input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Image Selector</h1>
+        <p>Find the most relevant image for any keyword using AI-powered semantic matching.</p>
+        
+        <div class="api-config">
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" value="http://localhost:5000/api/select-image" placeholder="http://localhost:5000/api/select-image">
+        </div>
+
+        <div class="form-group">
+            <label for="keyword">Keyword:</label>
+            <input type="text" id="keyword" placeholder="e.g., Ormond Beach oceanfront house" required>
+        </div>
+
+        <div class="form-group">
+            <label for="article">Article Text (optional):</label>
+            <textarea id="article" placeholder="Optional article text for better matching..."></textarea>
+        </div>
+
+        <button onclick="selectImage()">Find Best Image</button>
+
+        <div class="loading" id="loading">
+            <p>🔍 Searching for the perfect image...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        async function selectImage() {
+            const keyword = document.getElementById('keyword').value.trim();
+            const article = document.getElementById('article').value.trim();
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const button = document.querySelector('button');
+
+            if (!keyword) {
+                alert('Please enter a keyword');
+                return;
+            }
+
+            // Show loading state
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        article: article || keyword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p><strong>Keyword:</strong> ${data.keyword}</p>
+                        <p><strong>Image URL:</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></p>
+                        <img src="${data.image_url}" alt="${data.keyword}" onerror="this.style.display='none'">
+                    `;
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>❌ Error</h3>
+                        <p>${data.error || 'Failed to find image'}</p>
+                    `;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Connection Error</h3>
+                    <p>Failed to connect to the API. Make sure the server is running.</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+            } finally {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                button.disabled = false;
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('keyword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                selectImage();
+            }
+        });
+    </script>
+</body>
+</html>
