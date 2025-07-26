@@ -69,8 +69,8 @@ def get_images_from_google(query, num=10):
     """Get images from Google Custom Search API."""
     url = "https://www.googleapis.com/customsearch/v1"
     params = {
-        "key": GOOGLE_API_KEY,
-        "cx": GOOGLE_CX,
+        "key": GOOGLE_API_KEY.strip(),
+        "cx": GOOGLE_CX.strip(),
         "q": query,
         "searchType": "image",
         "num": num,
