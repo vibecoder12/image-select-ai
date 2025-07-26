@@ -1,43 +1,73 @@
-# GitHub Pages Deployment Instructions
+# Deploy to Render
 
-## Enable GitHub Pages
+## Quick Deploy (One-Click)
 
-1. Go to your repository: https://github.com/vibecoder12/image-select-ai
-2. Click on **Settings** tab
-3. Scroll down to **Pages** section in the left sidebar
-4. Under **Source**, select **Deploy from a branch**
-5. Select **main** branch and **/ (root)** folder
-6. Click **Save**
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vibecoder12/image-select-ai)
 
-## Access Your Frontend
+## Manual Deploy Steps
 
-Once GitHub Pages is enabled, your frontend will be available at:
-**https://vibecoder12.github.io/image-select-ai**
+### 1. Create Render Account
+1. Go to [render.com](https://render.com)
+2. Sign up with GitHub
+3. Connect your repository: `vibecoder12/image-select-ai`
 
-## How to Use
+### 2. Create Web Service
+1. Click **New → Web Service**
+2. Connect your GitHub repository
+3. Use these settings:
+   - **Name**: image-selector-api
+   - **Environment**: Python
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn app:app`
 
-1. **Start your API server** locally:
-   ```bash
-   python app.py
-   ```
+### 3. Set Environment Variables
+In Render dashboard, go to **Environment → Environment Variables** and add:
 
-2. **Access the frontend** at the GitHub Pages URL above
+| Variable | Value | Description |
+|----------|--------|-------------|
+| `GOOGLE_API_KEY` | `your_api_key_here` | Google Custom Search API key |
+| `GOOGLE_CX` | `your_cx_here` | Google Custom Search Engine ID |
 
-3. **Enter your API endpoint**: `http://localhost:5000/api/select-image`
+### 4. Deploy
+Click **Deploy** and wait for the build to complete.
 
-4. **Enter keywords** and click "Find Best Image"
+## Environment Variables Setup
 
-## Alternative: Deploy API to Cloud
+### Get Google API Key
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable **Custom Search JSON API**
+4. Create credentials (API key)
 
-For production use, consider deploying your API to:
-- **Render** (free tier available)
-- **Heroku** 
-- **Railway**
-- **PythonAnywhere**
+### Get Custom Search Engine ID
+1. Go to [Google Custom Search Engine](https://cse.google.com/cse/)
+2. Create a new search engine
+3. Copy the **Search engine ID**
 
-Then update the API URL in the frontend to point to your deployed API.
+## API Usage
 
-## Current Status
-✅ Repository pushed to GitHub
-✅ Frontend interface created
-✅ Ready for GitHub Pages deployment
+Once deployed, your API will be available at:
+`https://image-selector-api.onrender.com`
+
+### Test the deployed API:
+```bash
+curl -X POST https://image-selector-api.onrender.com/api/select-image \
+  -H "Content-Type: application/json" \
+  -d '{"keyword": "Ormond Beach oceanfront house"}'
+```
+
+### Update frontend:
+Update the API URL in `index.html` to use your Render URL:
+```javascript
+const apiUrl = 'https://image-selector-api.onrender.com/api/select-image';
+```
+
+## Monitoring
+- **Logs**: Available in Render dashboard
+- **Health check**: `/api/health`
+- **Status**: Check service status in Render dashboard
+
+## Troubleshooting
+- **Build fails**: Check Python version compatibility
+- **API errors**: Verify environment variables are set
+- **Memory issues**: Consider upgrading Render plan
